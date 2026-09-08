@@ -1,14 +1,19 @@
 W02 Group Project Local Clone Evidence
 
-Local repository path:
-C:\Users\Usuario\Desktop\w02-blazor-group-project
+Local clone path:
+C:\Users\Usuario\Desktop\w02-blazor-group-project-clone
 
-Repository status:
-The repository was initialized locally with Git before the first project files were added.
+Clone command:
+  git clone https://github.com/LuisE503/w02-blazor-group-project.git w02-blazor-group-project-clone
 
-Expected verification commands:
+Verified clone commands:
   git remote -v
   git branch --show-current
   git status --short
 
-This file is included as an artifact showing the local project workspace. The repository will be cloned or synchronized from GitHub after the first push.
+Verified result:
+  origin https://github.com/LuisE503/w02-blazor-group-project.git
+  master
+  clean working tree
+
+This file is included as an artifact showing the local clone of the group's project repository.
