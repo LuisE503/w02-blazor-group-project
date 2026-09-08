@@ -2,9 +2,10 @@
 
 ## Team
 
-This project is being completed by a solo team for the planning and setup activity.
+This project currently has one active participant. The other assigned team member has not responded, so the project planning and setup are being completed by the active participant while communication remains open.
 
-- Luis E503
+- **Active participant:** Luis E503
+- **Team status:** One active participant; additional teammate communication pending.
 
 ## Project Purpose
 
@@ -50,4 +51,4 @@ A personal outdoor activity journal for recording hikes and discovering local tr
 
 ## Project Organization
 
-Trello will be used for task tracking once the project direction is selected. The GitHub repository will contain the Blazor application, project documentation, and task history.
+Trello will be used for task tracking once the project direction is selected. Until the shared Trello board is available, `PROJECT-BOARD.md` provides the initial task board and responsibilities. The GitHub repository will contain the Blazor application, project documentation, and task history.
