@@ -1,0 +1,199 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>Conecta Cuatro | EmprendeTrack Lab</PageTitle>
+
+<main class="game-shell">
+	<section class="game-intro" aria-labelledby="game-title">
+		<p class="eyebrow">W04 Blazor assignment</p>
+		<h1 id="game-title">Conecta Cuatro</h1>
+		<p class="intro-copy">Drop your pieces, make a line of four, and keep the pressure on.</p>
+		<div class="turn-banner @TurnBannerClass" role="status" aria-live="polite">
+			@if (winner is not null)
+			{
+				<strong>@winner Wins!</strong>
+			}
+			else if (isDraw)
+			{
+				<strong>Board full. It's a draw.</strong>
+			}
+			else
+			{
+				<span>Your turn</span>
+				<strong class="player-name">@CurrentPlayerName</strong>
+			}
+		</div>
+	</section>
+
+	<section class="game-layout" aria-label="Connect Four game">
+		<div class="board-panel">
+			<div class="board-toolbar">
+				<div>
+					<span class="panel-kicker">Live board</span>
+					<h2>Choose a column</h2>
+				</div>
+				<button class="reset-button" type="button" @onclick="ResetGame">New game</button>
+			</div>
+
+			<div class="column-controls" aria-label="Choose a column">
+				@for (var column = 0; column < ColumnCount; column++)
+				{
+					var selectedColumn = column;
+					<button class="column-button" type="button" aria-label="Drop piece in column @(column + 1)" disabled="@(!CanPlayColumn(selectedColumn))" @onclick="() => DropPiece(selectedColumn)">
+						<span aria-hidden="true">↓</span>
+					</button>
+				}
+			</div>
+
+			<div class="connect-board" role="grid" aria-label="Connect Four board">
+				@for (var row = 0; row < RowCount; row++)
+				{
+					for (var column = 0; column < ColumnCount; column++)
+					{
+						var cell = board[row, column];
+						<div class="board-cell @(GetCellClass(cell))" role="gridcell" aria-label="Row @(row + 1), column @(column + 1), @(GetCellLabel(cell))"></div>
+					}
+				}
+			</div>
+
+			<div class="legend" aria-label="Players">
+				<span><i class="piece red-piece"></i> Player Red</span>
+				<span><i class="piece yellow-piece"></i> Player Yellow</span>
+			</div>
+		</div>
+
+		<aside class="score-panel" aria-label="Game statistics">
+			<div class="score-heading">
+				<span class="panel-kicker">Session stats</span>
+				<h2>Scoreboard</h2>
+			</div>
+			<div class="score-row">
+				<span><i class="piece red-piece"></i> Red</span>
+				<strong>@scores[Player.Red]</strong>
+			</div>
+			<div class="score-row">
+				<span><i class="piece yellow-piece"></i> Yellow</span>
+				<strong>@scores[Player.Yellow]</strong>
+			</div>
+
+			<div class="moves-heading">
+				<span class="panel-kicker">Additional feature</span>
+				<h2>Move history <span>(@moves.Count)</span></h2>
+			</div>
+			@if (moves.Count == 0)
+			{
+				<p class="empty-state">No moves yet. Start by choosing a column.</p>
+			}
+			else
+			{
+				<ol class="move-list">
+					@foreach (var move in moves)
+					{
+						<li><span class="move-number">@move.Number.ToString("00")</span><i class="piece @(move.Player == Player.Red ? "red-piece" : "yellow-piece")"></i>@move.Player in column @move.Column</li>
+					}
+				</ol>
+			}
+		</aside>
+	</section>
+</main>
+
+@code {
+	private const int RowCount = 6;
+	private const int ColumnCount = 7;
+	private readonly Player[,] board = new Player[RowCount, ColumnCount];
+	private readonly List<Move> moves = [];
+	private readonly Dictionary<Player, int> scores = new()
+	{
+		[Player.Red] = 0,
+		[Player.Yellow] = 0
+	};
+
+	private Player currentPlayer = Player.Red;
+	private Player? winner;
+	private bool isDraw;
+
+	private string CurrentPlayerName => currentPlayer.ToString();
+	private string TurnBannerClass => winner is not null ? "winner-banner" : isDraw ? "draw-banner" : currentPlayer == Player.Red ? "red-banner" : "yellow-banner";
+
+	private bool CanPlayColumn(int column) => winner is null && !isDraw && board[0, column] == Player.None;
+
+	private void DropPiece(int column)
+	{
+		if (!CanPlayColumn(column))
+		{
+			return;
+		}
+
+		var row = RowCount - 1;
+		while (row >= 0 && board[row, column] != Player.None)
+		{
+			row--;
+		}
+
+		board[row, column] = currentPlayer;
+		moves.Add(new Move(moves.Count + 1, currentPlayer, column + 1));
+
+		if (HasFourInARow(row, column))
+		{
+			winner = currentPlayer;
+			scores[currentPlayer]++;
+		}
+		else if (moves.Count == RowCount * ColumnCount)
+		{
+			isDraw = true;
+		}
+		else
+		{
+			currentPlayer = currentPlayer == Player.Red ? Player.Yellow : Player.Red;
+		}
+	}
+
+	private bool HasFourInARow(int row, int column)
+	{
+		var directions = new[] { (rowChange: 0, columnChange: 1), (rowChange: 1, columnChange: 0), (rowChange: 1, columnChange: 1), (rowChange: 1, columnChange: -1) };
+		return directions.Any(direction => 1 + CountDirection(row, column, direction.rowChange, direction.columnChange) + CountDirection(row, column, -direction.rowChange, -direction.columnChange) >= 4);
+	}
+
+	private int CountDirection(int row, int column, int rowChange, int columnChange)
+	{
+		var count = 0;
+		var nextRow = row + rowChange;
+		var nextColumn = column + columnChange;
+
+		while (nextRow >= 0 && nextRow < RowCount && nextColumn >= 0 && nextColumn < ColumnCount && board[nextRow, nextColumn] == currentPlayer)
+		{
+			count++;
+			nextRow += rowChange;
+			nextColumn += columnChange;
+		}
+
+		return count;
+	}
+
+	private void ResetGame()
+	{
+		Array.Clear(board);
+		moves.Clear();
+		winner = null;
+		isDraw = false;
+		currentPlayer = Player.Red;
+	}
+
+	private static string GetCellClass(Player cell) => cell switch
+	{
+		Player.Red => "red-piece",
+		Player.Yellow => "yellow-piece",
+		_ => "empty-piece"
+	};
+
+	private static string GetCellLabel(Player cell) => cell == Player.None ? "empty" : cell.ToString();
+
+	private enum Player
+	{
+		None,
+		Red,
+		Yellow
+	}
+
+	private sealed record Move(int Number, Player Player, int Column);
+}
